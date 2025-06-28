@@ -1,0 +1,52 @@
+name: Weekly GeoLite2 Data Release
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'  # 每周一凌晨 2 点
+  workflow_dispatch:     # 允许手动触发
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set tag name
+        id: tag
+        run: |
+          TAG=v1.0-$(date +%Y%m%d)
+          echo "TAG_NAME=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Download GeoLite2-Country.mmdb
+        run: |
+          mkdir -p src/main/resources
+          curl -L -o src/main/resources/GeoLite2/GeoLite2-Country.mmdb https://git.io/GeoLite2-Country.mmdb
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+
+      - name: Build JAR
+        run: mvn clean package
+
+      - name: Commit & Push Tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "hstyi"
+          git config user.email "hstyi@foxmail.com"
+          git tag ${{ steps.tag.outputs.TAG_NAME }}
+          git push origin ${{ steps.tag.outputs.TAG_NAME }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.TAG_NAME }}
+          name: ${{ steps.tag.outputs.TAG_NAME }}
+          files: target/*.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
