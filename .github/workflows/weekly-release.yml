@@ -1,8 +1,6 @@
 name: Weekly GeoLite2 Data Release
 
 on:
-  schedule:
-    - cron: '0 2 * * 1'  # 每周一凌晨 2 点
   workflow_dispatch:     # 允许手动触发
   push:
 
@@ -20,7 +18,7 @@ jobs:
       - name: Set tag name
         id: tag
         run: |
-          TAG=v1.0-$(date +%Y%m%d)
+          TAG=v1.0-$(date +%Y%m%d%H%M)
           echo "TAG_NAME=$TAG" >> $GITHUB_OUTPUT
 
       - name: Download GeoLite2-Country.mmdb
@@ -43,6 +41,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/main/resources/GeoLite2/GeoLite2-Country.mmdb
+          git commit -m "Update GeoLite2-Country.mmdb"
           git tag ${{ steps.tag.outputs.TAG_NAME }}
           git push origin ${{ steps.tag.outputs.TAG_NAME }}
 
