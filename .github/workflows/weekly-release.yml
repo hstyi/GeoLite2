@@ -3,7 +3,9 @@ name: Weekly GeoLite2 Data Release
 on:
   workflow_dispatch:     # 允许手动触发
   push:
-
+  schedule:
+    - cron: '0 0 * * 1'
+    
 permissions:
   contents: write
 
